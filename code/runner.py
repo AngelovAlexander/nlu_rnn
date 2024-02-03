@@ -402,7 +402,7 @@ if __name__ == "__main__":
         code for training language model.
         change this to different values, or use it to get you started with your own testing class
         '''
-        train_size = 1000
+        train_size = 25000
         dev_size = 1000
         vocab_size = 2000
 
@@ -445,7 +445,11 @@ if __name__ == "__main__":
         ##########################
         rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
         runner = Runner(rnn_model)
-        y,s = rnn_model.predict(X_dev)
+        #y,s = rnn_model.predict(X_dev)
+        runner.train(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+        docs = load_lm_dataset(data_folder + '/wiki-test.txt')
+        S_test = docs_to_indices(docs, word_to_num, 1, 1)
+        X_test, D_test = seqs_to_lmXY(S_test)
 
         run_loss = -1
         adjusted_loss = -1
