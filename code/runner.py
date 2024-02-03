@@ -41,13 +41,11 @@ class Runner(object):
         '''
 
         loss = 0.
+        # Estimating the outputs with the model
         y, s = self.model.predict(x)
+        # Computing the total loss of the model
         for i in range(len(d)):
             loss -= np.log(y[i, d[i]])
-
-        ##########################
-        # --- your code here --- #
-        ##########################
 
         return loss
 
@@ -100,6 +98,7 @@ class Runner(object):
 
         mean_loss = 0.
         total = 0
+        # Computing the average loss by adding the losses of all sentences and then dividing by the total number of words in the X corpus
         for x,d in zip(X, D):
             mean_loss += self.compute_loss(x,d)
             total += len(x)
@@ -444,6 +443,9 @@ if __name__ == "__main__":
         ##########################
         # --- your code here --- #
         ##########################
+        rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
+        runner = Runner(rnn_model)
+        y,s = rnn_model.predict(X_dev)
 
         run_loss = -1
         adjusted_loss = -1

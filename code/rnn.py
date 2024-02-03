@@ -61,15 +61,15 @@ class RNN(Model):
 		y = np.zeros((len(x), self.out_vocab_size))
 
 		for t in range(len(x)):
+			# On the first time step, the hidden state is calculated without including information from previos state, as such does not exist.
+			# It is simply calculated via taking the sigmoid (equation 1 in the instructions) of the Vx_t function
 			if t == 0:
-				#continue
 				s[t] = sigmoid(np.dot(self.V, make_onehot(x[t], self.vocab_size)))
 			else:
+				# Else an information from the previous states is includes (via equations 2 and 1 from the introductions)
 				s[t] = sigmoid(np.dot(self.V, make_onehot(x[t], self.vocab_size)) + np.dot(self.U, s[t-1]))
+			# In the end we compute the outputs (via equation 3 and 4 from the instructions)
 			y[t] = softmax(np.dot(self.W, s[t]))
-			##########################
-			# --- your code here --- #
-			##########################
 
 
 		return y, s
@@ -92,18 +92,16 @@ class RNN(Model):
 		'''
 
 		for t in reversed(range(len(x))):
+			# Updating the W matrix (equations 8 and 9)
 			temp_deltaW = make_onehot(d[t], self.vocab_size) - y[t]
 			self.deltaW += np.outer(temp_deltaW,s[t])
 
+			# Updating the V matrix (equations 10 and 11)
 			temp_deltaV = np.multiply(np.dot(self.W.T,temp_deltaW), grad(s[t]))
 			self.deltaV += np.outer(temp_deltaV, make_onehot(x[t], self.vocab_size))
 			
-			self.deltaU += np.outer(temp_deltaV, s[t - 1])
-
-			##########################
-			# --- your code here --- #
-			##########################
-		
+			# Updating the U matrix (equation 14)
+			self.deltaU += np.outer(temp_deltaV, s[t - 1])		
 
 	def acc_deltas_np(self, x, d, y, s):
 		'''
@@ -145,23 +143,26 @@ class RNN(Model):
 		
 		no return values
 		'''
-		temp_deltaW = make_onehot(d[len(x) - steps], self.vocab_size) - y[len(x) - steps]
-		temp_deltaV = np.multiply(np.dot(self.W.T,temp_deltaW), grad(s[len(x) - steps]))
 			
 		for t in reversed(range(len(x))):
-			if t - steps >= 1:
-				temp_deltaV = np.multiply(np.dot(self.U.T, temp_deltaV[t - steps]), grad(s[t - steps - 1]))
-				self.deltaV += np.outer(temp_deltaV, make_onehot(x[t - steps - 1], self.vocab_size))
-			else:
-				break
-			#self.deltaU += np.outer(temp_deltaV, s[t - 1])
+			# Updating the W matrix (equations 8 and 9)
+			temp_deltaW = make_onehot(d[t], self.vocab_size) - y[t]
+			self.deltaW += np.outer(temp_deltaW,s[t])
 
-			##########################
-			# --- your code here --- #
-			##########################
-		#pass
+			# Updating the V matrix (equations 10 and 11)
+			temp_deltaV = np.multiply(np.dot(self.W.T,temp_deltaW), grad(s[t]))
+			self.deltaV += np.outer(temp_deltaV, make_onehot(x[t], self.vocab_size))
 			
+			# Updating the U matrix (equation 14)
+			self.deltaU += np.outer(temp_deltaV, s[t - 1])
 
+			# The V and U matrices are additionally updated r (step) times
+			for r in range(steps):
+				if r + 1 > t:
+					break
+				temp_deltaV = np.multiply(np.dot(self.U.T, temp_deltaV), grad(s[t - r - 1]))
+				self.deltaV += np.outer(temp_deltaV, make_onehot(x[t - r - 1], self.vocab_size))
+				self.deltaU += np.outer(temp_deltaV, s[t - r - 2])
 
 	def acc_deltas_bptt_np(self, x, d, y, s, steps):
 		'''
