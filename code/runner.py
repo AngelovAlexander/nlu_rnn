@@ -451,8 +451,15 @@ if __name__ == "__main__":
         S_test = docs_to_indices(docs, word_to_num, 1, 1)
         X_test, D_test = seqs_to_lmXY(S_test)
 
-        run_loss = -1
-        adjusted_loss = -1
+        mean_loss = runner.compute_mean_loss(X_test, D_test)
+        print("Mean loss is: " + str(mean_loss))
+
+        np.save("data/rnn.U.npy", rnn_model.U)
+        np.save("data/rnn.V.npy", rnn_model.V)
+        np.save("data/rnn.W.npy", rnn_model.W)
+
+        run_loss = mean_loss
+        adjusted_loss = adjust_loss(run_loss, fraction_lost, q)
 
         print("Unadjusted: %.03f" % np.exp(run_loss))
         print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
