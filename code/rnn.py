@@ -121,10 +121,16 @@ class RNN(Model):
 		no return values
 		'''
 
-		##########################
-		# --- your code here --- #
-		##########################
-		pass
+		# Updating the W matrix just for the last time step (equations 8 and 9)
+		temp_deltaW = make_onehot(d[0], self.vocab_size) - y[len(x) - 1]
+		self.deltaW += np.outer(temp_deltaW,s[len(x) - 1])
+
+		# Updating the V matrix just for the last time step (equations 10 and 11)
+		temp_deltaV = np.multiply(np.dot(self.W.T,temp_deltaW), grad(s[len(x) - 1]))
+		self.deltaV += np.outer(temp_deltaV, make_onehot(x[len(x) - 1], self.vocab_size))
+		
+		# Updating the U matrix just for the last time step (equation 14)
+		self.deltaU += np.outer(temp_deltaV, s[len(x) - 2])
 		
 	def acc_deltas_bptt(self, x, d, y, s, steps):
 		'''
@@ -182,8 +188,22 @@ class RNN(Model):
 
 		no return values
 		'''
+		
+		# Updating the W matrix just for the last time step (equations 8 and 9)
+		temp_deltaW = make_onehot(d[0], self.vocab_size) - y[len(x) - 1]
+		self.deltaW += np.outer(temp_deltaW,s[len(x) - 1])
 
-		##########################
-		# --- your code here --- #
-		##########################
-		pass
+		# Updating the V matrix just for the last time step (equations 10 and 11)
+		temp_deltaV = np.multiply(np.dot(self.W.T,temp_deltaW), grad(s[len(x) - 1]))
+		self.deltaV += np.outer(temp_deltaV, make_onehot(x[len(x) - 1], self.vocab_size))
+		
+		# Updating the U matrix just for the last time step(equation 14)
+		self.deltaU += np.outer(temp_deltaV, s[len(x) - 2])
+
+		# The V and U matrices are additionally updated r (step)
+		for r in range(steps):
+			if r + 1 > len(x) - 1:
+				break
+			temp_deltaV = np.multiply(np.dot(self.U.T, temp_deltaV), grad(s[len(x) - 1 - r - 1]))
+			self.deltaV += np.outer(temp_deltaV, make_onehot(x[len(x) - 1 - r - 1], self.vocab_size))
+			self.deltaU += np.outer(temp_deltaV, s[len(x) - 1 - r - 2])

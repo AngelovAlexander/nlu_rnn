@@ -63,9 +63,10 @@ class Runner(object):
 
         loss = 0.
 
-        ##########################
-        # --- your code here --- #
-        ##########################
+        # Estimating the outputs with the model
+        y, s = self.model.predict(x)
+        # Computing the total loss of the model based on the last time step
+        loss -= np.log(y[-1, d[0]])
 
         return loss
 
@@ -80,9 +81,12 @@ class Runner(object):
         return 1 if argmax(y[t]) == d[0], 0 otherwise
         '''
 
-        ##########################
-        # --- your code here --- #
-        ##########################
+        # Predicting the outputs
+        y,s = self.model.predict(x)
+
+        # Checking whether the last output is equal to the word class
+        if np.argmax(y[-1]) == d[0]:
+            return 1
 
         return 0
 
