@@ -77,10 +77,9 @@ class GRU(GRUAbstract):
         no return values
         '''
 
-        ##########################
-        # --- your code here --- #
-        ##########################
-        self.backward(x, t, s, delta_output)
+        # Calculating the delta output for the last time steps (equation 9)
+        delta_output = make_onehot(d[0], self.vocab_size) - y[len(x) - 1]
+        self.backward(x, len(x) - 1, s, delta_output)
 
     def acc_deltas_bptt_np(self, x, d, y, s, steps):
         '''
@@ -98,11 +97,8 @@ class GRU(GRUAbstract):
         s	predicted hidden layer for x; list of vectors, e.g., [[1.2, -2.3, 5.3, 1.0], [-2.1, -1.1, 0.2, 4.2], [...]]
             should be part of the return value of predict(x)
 
-        no return values
+        no return valuess
         '''
-
-        ##########################
-        # --- your code here --- #
-        ##########################
-
-        self.backward(x, t, s, delta_output, steps)
+        # Calculating the delta output for the last time steps (equation 9)
+        delta_output = make_onehot(d[0], self.vocab_size) - y[len(y) - 1]
+        self.backward(x, len(x) - 1, s, delta_output, steps)
