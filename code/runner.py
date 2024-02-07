@@ -449,7 +449,6 @@ if __name__ == "__main__":
         ##########################
         rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
         runner = Runner(rnn_model)
-        #y,s = rnn_model.predict(X_dev)
         runner.train(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
         docs = load_lm_dataset(data_folder + '/wiki-test.txt')
         S_test = docs_to_indices(docs, word_to_num, 1, 1)
@@ -473,7 +472,7 @@ if __name__ == "__main__":
         starter code for parameter estimation.
         change this to different values, or use it to get you started with your own testing class
         '''
-        train_size = 1000
+        train_size = 10000
         dev_size = 1000
         vocab_size = 2000
 
@@ -512,8 +511,14 @@ if __name__ == "__main__":
         ##########################
         # --- your code here --- #
         ##########################
+        rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
+        runner = Runner(rnn_model)
+        runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+        docs = load_np_dataset(data_folder + '/wiki-test.txt')
+        S_test = docs_to_indices(docs, word_to_num, 1, 1)
+        X_test, D_test = seqs_to_npXY(S_test)
 
-        acc = 0.
+        acc = runner.compute_acc_np(X_test, D_test)
 
         print("Accuracy: %.03f" % acc)
 
@@ -562,6 +567,13 @@ if __name__ == "__main__":
         # --- your code here --- #
         ##########################
 
-        acc = 0.
+        gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
+        runner = Runner(gru_model)
+        runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+        docs = load_np_dataset(data_folder + '/wiki-test.txt')
+        S_test = docs_to_indices(docs, word_to_num, 1, 1)
+        X_test, D_test = seqs_to_npXY(S_test)
+
+        acc = runner.compute_acc_np(X_test, D_test)
 
         print("Accuracy: %.03f" % acc)
