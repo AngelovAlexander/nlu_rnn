@@ -109,10 +109,6 @@ class Runner(object):
         
         mean_loss /= total
 
-        ##########################
-        # --- your code here --- #
-        ##########################
-
         return mean_loss
 
     def train(self, X, D, X_dev, D_dev, epochs=10, learning_rate=0.5, anneal=5, back_steps=0, batch_size=100,
@@ -518,7 +514,7 @@ if __name__ == "__main__":
         S_test = docs_to_indices(docs, word_to_num, 1, 1)
         X_test, D_test = seqs_to_npXY(S_test)
 
-        acc = runner.compute_acc_np(X_test, D_test)
+        acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
 
         print("Accuracy: %.03f" % acc)
 
@@ -570,10 +566,7 @@ if __name__ == "__main__":
         gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
         runner = Runner(gru_model)
         runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
-        docs = load_np_dataset(data_folder + '/wiki-test.txt')
-        S_test = docs_to_indices(docs, word_to_num, 1, 1)
-        X_test, D_test = seqs_to_npXY(S_test)
 
-        acc = runner.compute_acc_np(X_test, D_test)
+        acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
 
         print("Accuracy: %.03f" % acc)
