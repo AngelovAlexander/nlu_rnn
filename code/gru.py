@@ -100,5 +100,5 @@ class GRU(GRUAbstract):
         no return valuess
         '''
         # Calculating the delta output for the last time steps (equation 9)
-        delta_output = make_onehot(d[0], self.vocab_size) - y[len(y) - 1]
+        delta_output = make_onehot(d[0], self.vocab_size) - y[-1]
         self.backward(x, len(x) - 1, s, delta_output, steps)

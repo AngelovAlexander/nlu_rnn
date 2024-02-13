@@ -36,6 +36,61 @@ def load_np_dataset(fname):
             sents.append(sent)
     return sents
 
+def load_np_two_datasets(fname, distance):
+    sents1 = []
+    sents2 = []
+    cnt = 0
+    with open(fname) as f:
+        for line in f:
+            if cnt == 0:
+                cnt += 1
+                continue
+            items = line.strip().split('\t')
+            subj_ind = int(items[1])
+            verb_idx = int(items[2])
+            verb_pos = items[3]
+            sent = [verb_pos] + items[0].split()[:verb_idx]
+            if verb_idx - subj_ind <= distance:
+                sents1.append(sent)
+            else:
+                sents2.append(sent)
+    return sents1, sents2
+
+def load_np_two_datasets_is_are(fname):
+    sents1 = []
+    sents2 = []
+    cnt = 0
+    with open(fname) as f:
+        for line in f:
+            if cnt == 0:
+                cnt += 1
+                continue
+            items = line.strip().split('\t')
+            verb_idx = int(items[2])
+            verb_pos = items[3]
+            verb = items[4]
+            inf_verb = items[5]
+            sent = [verb_pos] + items[0].split()[:verb_idx]
+            if verb == "is" or inf_verb == "is":
+                sents1.append(sent)
+            else:
+                sents2.append(sent)
+    return sents1, sents2
+
+def load_subj_and_verb_ind(fname):
+    ind = []
+    cnt = 0
+    with open(fname) as f:
+        for line in f:
+            if cnt == 0:
+                cnt += 1
+                continue
+            items = line.strip().split('\t')
+            subj_ind = int(items[1])
+            verb_idx = int(items[2])
+            
+            ind.append(verb_idx - subj_ind)
+    return np.array(ind)
 
 def load_lm_np_dataset(fname):
     sents = []
@@ -51,6 +106,23 @@ def load_lm_np_dataset(fname):
             inf_verb = items[5]
             sent = items[0].split()[:verb_idx] + [verb, inf_verb]
             sents.append(sent)
+    return sents
+
+def load_lm_np_dataset_verbs(fname):
+    sents = []
+    cnt = 0
+    with open(fname) as f:
+        for line in f:
+            if cnt == 0:
+                cnt += 1
+                continue
+            items = line.strip().split('\t')
+            verb = items[4].lower()
+            inf_verb = items[5].lower()
+            if verb < inf_verb:
+                sents.append(((verb, inf_verb)))
+            else:
+                sents.append(((inf_verb, verb)))
     return sents
 
 

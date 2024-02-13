@@ -507,16 +507,42 @@ if __name__ == "__main__":
         ##########################
         # --- your code here --- #
         ##########################
-        rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
-        runner = Runner(rnn_model)
-        runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
-        docs = load_np_dataset(data_folder + '/wiki-test.txt')
-        S_test = docs_to_indices(docs, word_to_num, 1, 1)
-        X_test, D_test = seqs_to_npXY(S_test)
+        #rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
+        #runner = Runner(rnn_model)
+        """Original"""
+        """runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
 
         acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
 
-        print("Accuracy: %.03f" % acc)
+        print("Accuracy -> 1 distance: %.03f" % acc)
+        """
+
+        
+        sent1, sent2 = load_np_two_datasets_is_are(data_folder + '/wiki-dev.txt')
+        #sents = load_np_dataset(data_folder + '/wiki-dev.txt')
+        S1_dev = docs_to_indices(sent1, word_to_num, 0, 0)
+        X1_dev, D1_dev = seqs_to_npXY(S1_dev)
+
+        X1_dev = X1_dev[:dev_size]
+        D1_dev = D1_dev[:dev_size]
+
+        S2_dev = docs_to_indices(sent2, word_to_num, 0, 0)
+        X2_dev, D2_dev = seqs_to_npXY(S2_dev)
+
+        X2_dev = X2_dev[:dev_size]
+        D2_dev = D2_dev[:dev_size]
+
+        ##########################
+        # --- your code here --- #
+        ##########################
+        rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
+        runner = Runner(rnn_model)
+        runner.train_np(X_train, D_train, X1_dev, D1_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+
+        acc = 100 * sum([runner.compute_acc_np(X1_dev[i], D1_dev[i]) for i in range(len(X1_dev))]) / len(X1_dev)
+
+        print("Accuracy not is are: %.03f" % acc)
+        
 
     if mode == "train-np-gru":
         '''
@@ -563,6 +589,7 @@ if __name__ == "__main__":
         # --- your code here --- #
         ##########################
 
+        """
         gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
         runner = Runner(gru_model)
         runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
@@ -570,3 +597,29 @@ if __name__ == "__main__":
         acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
 
         print("Accuracy: %.03f" % acc)
+        """
+
+        sent1, sent2 = load_np_two_datasets_is_are(data_folder + '/wiki-dev.txt')
+        #sents = load_np_dataset(data_folder + '/wiki-dev.txt')
+        S1_dev = docs_to_indices(sent1, word_to_num, 0, 0)
+        X1_dev, D1_dev = seqs_to_npXY(S1_dev)
+
+        X1_dev = X1_dev[:dev_size]
+        D1_dev = D1_dev[:dev_size]
+
+        S2_dev = docs_to_indices(sent2, word_to_num, 0, 0)
+        X2_dev, D2_dev = seqs_to_npXY(S2_dev)
+
+        X2_dev = X2_dev[:dev_size]
+        D2_dev = D2_dev[:dev_size]
+
+        ##########################
+        # --- your code here --- #
+        ##########################
+        gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
+        runner = Runner(gru_model)
+        runner.train_np(X_train, D_train, X2_dev, D2_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+
+        acc = 100 * sum([runner.compute_acc_np(X2_dev[i], D2_dev[i]) for i in range(len(X2_dev))]) / len(X2_dev)
+
+        print("Accuracy not is are: %.03f" % acc)
