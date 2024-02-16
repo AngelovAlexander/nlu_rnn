@@ -79,6 +79,7 @@ class GRU(GRUAbstract):
 
         # Calculating the delta output for the last time steps (equation 9)
         delta_output = make_onehot(d[0], self.vocab_size) - y[len(x) - 1]
+        # Backpropagation
         self.backward(x, len(x) - 1, s, delta_output)
 
     def acc_deltas_bptt_np(self, x, d, y, s, steps):
@@ -101,4 +102,5 @@ class GRU(GRUAbstract):
         '''
         # Calculating the delta output for the last time steps (equation 9)
         delta_output = make_onehot(d[0], self.vocab_size) - y[len(y) - 1]
+        # Backpropagation through time
         self.backward(x, len(x) - 1, s, delta_output, steps)

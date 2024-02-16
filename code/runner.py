@@ -43,7 +43,7 @@ class Runner(object):
         loss = 0.
         # Estimating the outputs with the model
         y, s = self.model.predict(x)
-        # Computing the total loss of the model
+        # Computing the total cross entropy loss of the model
         for i in range(len(d)):
             loss -= np.log(y[i, d[i]])
 
@@ -440,23 +440,26 @@ if __name__ == "__main__":
         # this is the best expected loss out of that set
         q = vocab.freq[vocab_size] / sum(vocab.freq[vocab_size:])
 
-        ##########################
-        # --- your code here --- #
-        ##########################
-        rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
+        # Training the RNN language model
+        rnn_model = RNN(vocab_size, hdim, vocab_size)
         runner = Runner(rnn_model)
         runner.train(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+
+        # Load the test set
         docs = load_lm_dataset(data_folder + '/wiki-test.txt')
         S_test = docs_to_indices(docs, word_to_num, 1, 1)
         X_test, D_test = seqs_to_lmXY(S_test)
 
+        # Calculating the mean loss on the test set
         mean_loss = runner.compute_mean_loss(X_test, D_test)
         print("Mean loss is: " + str(mean_loss))
 
+        # Save model parameters
         np.save("data/rnn.U.npy", rnn_model.U)
         np.save("data/rnn.V.npy", rnn_model.V)
         np.save("data/rnn.W.npy", rnn_model.W)
 
+        # Calculating the unadjusted and adjusted losses
         run_loss = mean_loss
         adjusted_loss = adjust_loss(run_loss, fraction_lost, q)
 
@@ -504,16 +507,12 @@ if __name__ == "__main__":
         X_dev = X_dev[:dev_size]
         D_dev = D_dev[:dev_size]
 
-        ##########################
-        # --- your code here --- #
-        ##########################
-        rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
+        # Training the RNN for number agreement task
+        rnn_model = RNN(vocab_size, hdim, vocab_size)
         runner = Runner(rnn_model)
         runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
-        docs = load_np_dataset(data_folder + '/wiki-test.txt')
-        S_test = docs_to_indices(docs, word_to_num, 1, 1)
-        X_test, D_test = seqs_to_npXY(S_test)
 
+        # Calculating the accuracy of the dev set
         acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
 
         print("Accuracy: %.03f" % acc)
@@ -559,14 +558,12 @@ if __name__ == "__main__":
         X_dev = X_dev[:dev_size]
         D_dev = D_dev[:dev_size]
 
-        ##########################
-        # --- your code here --- #
-        ##########################
-
-        gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
+        # Training the GRU for number agreement task
+        gru_model = GRU(vocab_size, hdim, vocab_size)
         runner = Runner(gru_model)
         runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
 
+        # Calculating the accuracy of the dev set
         acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
 
         print("Accuracy: %.03f" % acc)
