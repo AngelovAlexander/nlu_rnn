@@ -11,7 +11,7 @@ def invert_dict(d):
 def load_lm_dataset(fname):
     sents = []
     cnt = 0
-    with open(fname) as f:
+    with open(fname, encoding="utf-8") as f:
         for line in f:
             if cnt == 0:
                 cnt += 1
@@ -23,18 +23,20 @@ def load_lm_dataset(fname):
 
 def load_np_dataset(fname):
     sents = []
+    dep_dists = [] ###
     cnt = 0
-    with open(fname) as f:
+    with open(fname, encoding="utf-8") as f:
         for line in f:
             if cnt == 0:
                 cnt += 1
                 continue
             items = line.strip().split('\t')
-            verb_idx = int(items[2])
-            verb_pos = items[3]
+            verb_idx = int(items[2]) # get verb index
+            verb_pos = items[3] # get verb pos tag
             sent = [verb_pos] + items[0].split()[:verb_idx]
             sents.append(sent)
-    return sents
+            dep_dists.append(int(items[2]) - int(items[1])) ###
+    return sents, np.array(dep_dists) ###
 
 
 def load_lm_np_dataset(fname):

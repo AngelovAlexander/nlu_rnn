@@ -50,11 +50,17 @@ class GRU(GRUAbstract):
 
         '''
 
+        # one hot encode word x
         x_in = make_onehot(x, self.vocab_size)
+        # reset gate (equation 18)
         r = sigmoid(self.Vr @ x_in + self.Ur @ s_previous)
+        # update gate (equation 19)
         z = sigmoid(self.Vz @ x_in + self.Uz @ s_previous)
+        # candidate hidden state (equation 20)
         h = np.tanh(self.Vh @ x_in + self.Uh @ (r * s_previous))
+        # hidden state
         s = z * s_previous + (1 - z) * h
+        # final output
         y = softmax(self.W @ s)
         return y, s, h, z, r
 
@@ -79,6 +85,7 @@ class GRU(GRUAbstract):
 
         # Calculating the delta output for the last time steps (equation 9)
         delta_output = make_onehot(d[0], self.vocab_size) - y[len(x) - 1]
+        # backpropogation
         self.backward(x, len(x) - 1, s, delta_output)
 
     def acc_deltas_bptt_np(self, x, d, y, s, steps):
@@ -101,4 +108,5 @@ class GRU(GRUAbstract):
         '''
         # Calculating the delta output for the last time steps (equation 9)
         delta_output = make_onehot(d[0], self.vocab_size) - y[len(y) - 1]
+        # backpropogation through time
         self.backward(x, len(x) - 1, s, delta_output, steps)

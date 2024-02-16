@@ -71,7 +71,6 @@ class RNN(Model):
 			# In the end we compute the outputs (via equation 3 and 4 from the instructions)
 			y[t] = softmax(np.dot(self.W, s[t]))
 
-
 		return y, s
 	
 	def acc_deltas(self, x, d, y, s):

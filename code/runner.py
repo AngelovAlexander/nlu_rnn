@@ -41,9 +41,9 @@ class Runner(object):
         '''
 
         loss = 0.
-        # Estimating the outputs with the model
+        # Estimating the outputs with the trained model
         y, s = self.model.predict(x)
-        # Computing the total loss of the model
+        # Computing the total cross entropy loss of the model
         for i in range(len(d)):
             loss -= np.log(y[i, d[i]])
 
@@ -347,6 +347,7 @@ class Runner(object):
 
                 if i % batch_size == 0:
                     self.model.scale_gradients_for_batch(batch_size)
+                    #print(np.mean(self.model._deltas.values()))
                     self.model.apply_deltas(learning_rate)
 
             if len(X) % batch_size > 0:
@@ -440,9 +441,6 @@ if __name__ == "__main__":
         # this is the best expected loss out of that set
         q = vocab.freq[vocab_size] / sum(vocab.freq[vocab_size:])
 
-        ##########################
-        # --- your code here --- #
-        ##########################
         rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
         runner = Runner(rnn_model)
         runner.train(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
@@ -468,7 +466,8 @@ if __name__ == "__main__":
         starter code for parameter estimation.
         change this to different values, or use it to get you started with your own testing class
         '''
-        train_size = 10000
+
+        train_size = 11757
         dev_size = 1000
         vocab_size = 2000
 
@@ -489,34 +488,72 @@ if __name__ == "__main__":
             vocab_size, len(vocab), 100 * (1 - fraction_lost)))
 
         # load training data
-        sents = load_np_dataset(data_folder + '/wiki-train.txt')
+        sents, train_dists = load_np_dataset(data_folder + '/wiki-train.txt')
         S_train = docs_to_indices(sents, word_to_num, 0, 0)
         X_train, D_train = seqs_to_npXY(S_train)
 
         X_train = X_train[:train_size]
         Y_train = D_train[:train_size]
+        train_dists = train_dists[:train_size]
 
         # load development data
-        sents = load_np_dataset(data_folder + '/wiki-dev.txt')
+        sents, dev_dists = load_np_dataset(data_folder + '/wiki-dev.txt')
         S_dev = docs_to_indices(sents, word_to_num, 0, 0)
         X_dev, D_dev = seqs_to_npXY(S_dev)
 
         X_dev = X_dev[:dev_size]
         D_dev = D_dev[:dev_size]
+        dev_dists = dev_dists[:dev_size]
 
-        ##########################
-        # --- your code here --- #
-        ##########################
-        rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
-        runner = Runner(rnn_model)
-        runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
-        docs = load_np_dataset(data_folder + '/wiki-test.txt')
-        S_test = docs_to_indices(docs, word_to_num, 1, 1)
-        X_test, D_test = seqs_to_npXY(S_test)
 
-        acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
+        # additional datasets for testing
+        cutoff = 5
+        X_train_short, Y_train_short = X_train[np.where(train_dists[:train_size] <= cutoff)], Y_train[np.where(train_dists[:train_size] <= cutoff)]
+        dev_dists1x, dev_dists1y = X_dev[np.where(dev_dists[:dev_size] <= cutoff)], D_dev[np.where(dev_dists[:dev_size] <= cutoff)]
+        dev_dists2x, dev_dists2y = X_dev[np.where(dev_dists[:dev_size] > cutoff)], D_dev[np.where(dev_dists[:dev_size] > cutoff)]
+        load = True
 
-        print("Accuracy: %.03f" % acc)
+        if load == False:
+            # initialise model and runner
+            rnn_model = RNN(vocab_size, hdim, vocab_size) 
+            runner = Runner(rnn_model)
+            # train model
+            #runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+            runner.train_np(X_train_short, Y_train_short, dev_dists1x, dev_dists1y, learning_rate = lr, anneal=5, back_steps = lookback)
+            # load test data
+            docs, dists = load_np_dataset(data_folder + '/wiki-test.txt')
+            S_test = docs_to_indices(docs, word_to_num, 1, 1)
+            X_test, D_test = seqs_to_npXY(S_test)
+            # compute accuracy
+            acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
+
+            print("Accuracy: %.03f" % acc)
+
+            np.save("big/rnnW", rnn_model.W)
+            np.save("big/rnnV", rnn_model.V)
+            np.save("big/rnnU", rnn_model.U)
+        else:
+            rnn_model = RNN(vocab_size, hdim, vocab_size) 
+            runner = Runner(rnn_model)
+            # train model
+            runner.model.U = np.load("rnnU.npy")
+            runner.model.V = np.load("rnnV.npy")
+            runner.model.W = np.load("rnnW.npy")
+
+            # load test data
+            docs, dists = load_np_dataset(data_folder + '/wiki-test.txt')
+            S_test = docs_to_indices(docs, word_to_num, 1, 1)
+            X_test, D_test = seqs_to_npXY(S_test)
+            # compute accuracy
+            
+            acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
+            #print("Accuracy: %.03f" % acc)
+            
+            acc1 = 100 * sum([runner.compute_acc_np(dev_dists1x[i], dev_dists1y[i]) for i in range(len(dev_dists1x))]) / len(dev_dists1x)
+            print("acc ", cutoff, " dist or less: ", acc1)
+            acc2 = 100 * sum([runner.compute_acc_np(dev_dists2x[i], dev_dists2y[i]) for i in range(len(dev_dists2x))]) / len(dev_dists2x)
+            print("acc ", cutoff + 1, " dist or more: ", acc2)
+
 
     if mode == "train-np-gru":
         '''
@@ -544,29 +581,70 @@ if __name__ == "__main__":
             vocab_size, len(vocab), 100 * (1 - fraction_lost)))
 
         # load training data
-        sents = load_np_dataset(data_folder + '/wiki-train.txt')
+        sents, train_dists = load_np_dataset(data_folder + '/wiki-train.txt')
         S_train = docs_to_indices(sents, word_to_num, 0, 0)
         X_train, D_train = seqs_to_npXY(S_train)
 
         X_train = X_train[:train_size]
         Y_train = D_train[:train_size]
+        train_dists = train_dists[:train_size]
 
         # load development data
-        sents = load_np_dataset(data_folder + '/wiki-dev.txt')
+        sents, dev_dists = load_np_dataset(data_folder + '/wiki-dev.txt')
         S_dev = docs_to_indices(sents, word_to_num, 0, 0)
         X_dev, D_dev = seqs_to_npXY(S_dev)
 
         X_dev = X_dev[:dev_size]
         D_dev = D_dev[:dev_size]
+        dev_dists = dev_dists[:dev_size]
 
-        ##########################
-        # --- your code here --- #
-        ##########################
 
-        gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
-        runner = Runner(gru_model)
-        runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+        # additional datasets for testing
+        cutoff = 5
+        X_train_short, Y_train_short = X_train[np.where(train_dists[:train_size] <= cutoff)], Y_train[np.where(train_dists[:train_size] <= cutoff)]
+        dev_dists1x, dev_dists1y = X_dev[np.where(dev_dists[:dev_size] <= cutoff)], D_dev[np.where(dev_dists[:dev_size] <= cutoff)]
+        dev_dists2x, dev_dists2y = X_dev[np.where(dev_dists[:dev_size] > cutoff)], D_dev[np.where(dev_dists[:dev_size] > cutoff)]
 
-        acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
+        load = True
+        if load == False:
+            # initialise model and runner
+            gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
+            runner = Runner(gru_model)
+            # train model
+            #runner.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+            runner.train_np(X_train_short, Y_train_short, dev_dists1x, dev_dists1y, learning_rate = lr, anneal=5, back_steps = lookback)
+            # calculate accuracy
+            acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
 
-        print("Accuracy: %.03f" % acc)
+            print("Accuracy: %.03f" % acc)
+
+            np.save("short/gruUr", gru_model.Ur)
+            np.save("short/gruVr", gru_model.Vr)
+            np.save("short/gruUz", gru_model.Uz)
+            np.save("short/gruVz", gru_model.Vz)
+            np.save("short/gruUh", gru_model.Uh)
+            np.save("short/gruVh", gru_model.Vh)
+            np.save("short/gruW", gru_model.W)
+
+        else:
+            # initialise model and runner
+            gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
+            runner = Runner(gru_model)
+            # train model
+            runner.model.Ur = np.load("gruUr.npy")
+            runner.model.Vr = np.load("gruVr.npy")
+            runner.model.Uz = np.load("gruUz.npy")
+            runner.model.Vz = np.load("gruVz.npy")
+            runner.model.Uh = np.load("gruUh.npy")
+            runner.model.Vh = np.load("gruVh.npy")
+            runner.model.W = np.load("gruW.npy")
+
+            # calculate accuracy
+            acc = 100 * sum([runner.compute_acc_np(X_dev[i], D_dev[i]) for i in range(len(X_dev))]) / len(X_dev)
+
+            #print("Accuracy: %.03f" % acc)
+            
+            acc1 = 100 * sum([runner.compute_acc_np(dev_dists1x[i], dev_dists1y[i]) for i in range(len(dev_dists1x))]) / len(dev_dists1x)
+            print("acc ", cutoff, " dist or less: ", acc1)
+            acc2 = 100 * sum([runner.compute_acc_np(dev_dists2x[i], dev_dists2y[i]) for i in range(len(dev_dists2x))]) / len(dev_dists2x)
+            print("acc ", cutoff + 1, " dist or more: ", acc2)
