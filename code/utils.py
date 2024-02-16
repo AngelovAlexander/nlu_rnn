@@ -77,6 +77,31 @@ def load_np_two_datasets_is_are(fname):
                 sents2.append(sent)
     return sents1, sents2
 
+def load_np_two_datasets_is_are_dist_counts(fname):
+    sents1 = []
+    sents2 = []
+    dist = []
+    cnt = 0
+    with open(fname) as f:
+        for line in f:
+            if cnt == 0:
+                cnt += 1
+                continue
+            items = line.strip().split('\t')
+            subj_ind = int(items[1])
+            verb_idx = int(items[2])
+            verb_pos = items[3]
+            verb = items[4]
+            inf_verb = items[5]
+            sent = [verb_pos] + items[0].split()[:verb_idx]
+            if verb == "is" or inf_verb == "is":
+                sents1.append(sent)
+                dist.append(verb_idx - subj_ind)
+            else:
+                sents2.append(sent)
+                #dist.append(verb_idx - subj_ind)
+    return sents1, sents2, dist
+
 def load_subj_and_verb_ind(fname):
     ind = []
     cnt = 0

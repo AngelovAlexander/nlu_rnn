@@ -518,7 +518,7 @@ if __name__ == "__main__":
         """
 
         
-        sent1, sent2 = load_np_two_datasets_is_are(data_folder + '/wiki-dev.txt')
+        sent1, sent2 = load_np_two_datasets(data_folder + '/wiki-dev.txt', 5)
         #sents = load_np_dataset(data_folder + '/wiki-dev.txt')
         S1_dev = docs_to_indices(sent1, word_to_num, 0, 0)
         X1_dev, D1_dev = seqs_to_npXY(S1_dev)
@@ -537,9 +537,9 @@ if __name__ == "__main__":
         ##########################
         rnn_model = RNN(vocab_size, hdim, vocab_size) # May need to change the parameters
         runner = Runner(rnn_model)
-        runner.train_np(X_train, D_train, X1_dev, D1_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+        runner.train_np(X_train, D_train, X2_dev, D2_dev, learning_rate = lr, anneal=5, back_steps = lookback)
 
-        acc = 100 * sum([runner.compute_acc_np(X1_dev[i], D1_dev[i]) for i in range(len(X1_dev))]) / len(X1_dev)
+        acc = 100 * sum([runner.compute_acc_np(X2_dev[i], D2_dev[i]) for i in range(len(X2_dev))]) / len(X2_dev)
 
         print("Accuracy not is are: %.03f" % acc)
         
@@ -569,6 +569,7 @@ if __name__ == "__main__":
             "Retained %d words from %d (%.02f%% of all tokens)\n" % (
             vocab_size, len(vocab), 100 * (1 - fraction_lost)))
 
+        
         # load training data
         sents = load_np_dataset(data_folder + '/wiki-train.txt')
         S_train = docs_to_indices(sents, word_to_num, 0, 0)
@@ -599,8 +600,10 @@ if __name__ == "__main__":
         print("Accuracy: %.03f" % acc)
         """
 
-        sent1, sent2 = load_np_two_datasets_is_are(data_folder + '/wiki-dev.txt')
+        sent1, sent2 = load_np_two_datasets(data_folder + '/wiki-dev.txt', 5)
+        
         #sents = load_np_dataset(data_folder + '/wiki-dev.txt')
+        
         S1_dev = docs_to_indices(sent1, word_to_num, 0, 0)
         X1_dev, D1_dev = seqs_to_npXY(S1_dev)
 
@@ -612,14 +615,14 @@ if __name__ == "__main__":
 
         X2_dev = X2_dev[:dev_size]
         D2_dev = D2_dev[:dev_size]
-
+        
         ##########################
         # --- your code here --- #
         ##########################
         gru_model = GRU(vocab_size, hdim, vocab_size) # May need to change the parameters
         runner = Runner(gru_model)
-        runner.train_np(X_train, D_train, X2_dev, D2_dev, learning_rate = lr, anneal=5, back_steps = lookback)
+        runner.train_np(X_train, D_train, X1_dev, D1_dev, learning_rate = lr, anneal=5, back_steps = lookback)
 
-        acc = 100 * sum([runner.compute_acc_np(X2_dev[i], D2_dev[i]) for i in range(len(X2_dev))]) / len(X2_dev)
+        acc = 100 * sum([runner.compute_acc_np(X1_dev[i], D1_dev[i]) for i in range(len(X1_dev))]) / len(X1_dev)
 
         print("Accuracy not is are: %.03f" % acc)
